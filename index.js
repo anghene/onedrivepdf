@@ -8,7 +8,7 @@ var app=express()
 var router = express.Router()
 const appid="67a4c393-c8c3-4a84-b855-282a1d7da22e"
 const apppwd="cfshUUMUQI9303^);@qgbQ7"
-const applink="https://anghene.com:5000/fetch"
+const applink="https://anghene.com/fetch"
 var clientcode=""
 var token = ""
 
