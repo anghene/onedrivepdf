@@ -46,7 +46,7 @@ app.get('/fetch', (req,res) => {console.log("resp: ", res)})
 function doThis(req,res){
 //PUT /me/drive/root:/FolderA/FileB.txt:/content
 // Content-Type: text/plain
-	opn('https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id='+ appid +'&redirect_uri=http://209.97.185.223:5000/fetch&response_type=code&state=1234&scope=mail.read');
+	opn('https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id='+ appid +'&redirect_uri=http://209.97.185.223:5000/fetch&scope=user.read');
 	request.post(options, function optionalCallback(err, httpResponse, body) {
 		if (err) {
 		return console.error('upload failed:', err);
@@ -78,7 +78,8 @@ const options = {
 	  'Content-Type' : 'application/x-www-form-urlencoded'
   	},
 	'form' : {
-		'client_id':appid
+		'client_id':appid,
+		'scope':'user.read'
 		// 'code' : appid,
 		// &scope:user.read%20mail.read
 		// &code:OAAABAAAAiL9Kn2Z27UubvWFPbm0gLWQJVzCTE9UkP3pSx1aXxUjq3n8b2JRLk4OxVXr...
