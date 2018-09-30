@@ -21,7 +21,6 @@ var r1 = express.Router();
 app.use(r1)
 app.post('/', (req,res) => doThis(req, res))
 app.get('/fetch', (req,res) => {console.log("resp: ", res)})
-
 // var options = {
 // 	'protocol': 'https:',
 // 	'port': 443,
