@@ -20,6 +20,7 @@ var r1 = express.Router();
 
 app.use(r1)
 app.post('/', (req,res) => doThis(req, res))
+app.get('/fetch', (req,res) => {console.log("resp: ", res)})
 
 // var options = {
 // 	'protocol': 'https:',
@@ -46,7 +47,7 @@ app.post('/', (req,res) => doThis(req, res))
 function doThis(req,res){
 //PUT /me/drive/root:/FolderA/FileB.txt:/content
 // Content-Type: text/plain
-	opn('https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id='+ appid +'&redirect_uri=https://login.live.com/oauth20_desktop.srf&response_type=code&state=1234&scope=mail.read');
+	opn('https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id='+ appid +'&redirect_uri=http://209.97.185.223:5000/fetch&response_type=code&state=1234&scope=mail.read');
 	request.post(options, function optionalCallback(err, httpResponse, body) {
 		if (err) {
 		return console.error('upload failed:', err);
