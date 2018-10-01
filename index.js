@@ -24,7 +24,7 @@ app.use(r1)
 app.post('/', (req,res) => doThis(req, res))
 app.get('/fetch', (req,res) => {
 	app.clientcode=req.query.code;
-	res.send('code captured  ' + app.clientcode);
+	res.redirect('/');
 })
 
 function getAcceptance(res){
@@ -34,7 +34,9 @@ function getAcceptance(res){
 function getToken(req,res){
 	//PUT /me/drive/root:/FolderA/FileB.txt:/content
 	// Content-Type: text/plain
-	getAcceptance(res);
+	if (empty(app.clientcode))
+	{getAcceptance(res);}
+	else
 	request(token_request, function optionalCallback(err, httpResponse, body) {
 		if (err) {
 		return console.error('upload failed:', err);
@@ -75,7 +77,7 @@ const token_request = {
 	'form' : {
 		'client_id':appid,
 		'client_secret':apppwd,
-		'code' : clientcode,
+		'code' : app.clientcode,
 		'redirect_uri': applink,
 		'grant_type':'authorization_code',
 		'scope':'user.read',
