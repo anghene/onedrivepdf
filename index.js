@@ -50,7 +50,7 @@ app.get('/token', (req,res) => {
 app.get('/download', (req,res) => {res.sendFile(path.join(__dirname, 'public', "document.pdf"))})
 app.get('/upload', (req,res) => res.render('upload'));
 app.post('/upload', upload, (req,res) => uploadToDrive(req,res));
-app.get('/logout', (res)=>{state.auth.token=null;res.redirect('/')})
+app.get('/logout', (req, res)=>{state.auth.token=null;res.redirect('/')})
 
 function getAcceptance(res){
 	res.redirect('https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id='
