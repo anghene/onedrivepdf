@@ -1,4 +1,5 @@
 const express = require('express')
+var fs = require('fs');
 const path = require('path')
 const PORT = process.env.PORT || 5000
 const request= require('request')
@@ -15,8 +16,7 @@ var router = express.Router()
 state={
 	applicationConfig : {
     		clientID: "2a56f63b-2904-4a09-9e02-9cf88138cffe",
-   		graphScopes: ["user.read"],
-    		graphEndpoint: "https://graph.microsoft.com/beta/me"
+    		graphEndpoint: "https://graph.microsoft.com/beta"
 	},
 	auth: {
 		token: null,
@@ -24,7 +24,8 @@ state={
 		appid:process.env.APPID,
 		apppwd:process.env.APPPWD,
 		redirectUrl:process.env.INSTANCE
-	}
+	},
+	filename: ""
 }
 
 app.use(bodyParser.json()); // for parsing application/json
@@ -35,7 +36,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 app.listen(PORT, () => console.log(`Listening on ${ PORT }`));
 
-app.get('/', (req, res) => {res.render('upload')});
+app.get('/', (req, res) => {res.redirect('getuser')});
 app.get('/echo', (req,res) =>{console.log("Echoed: ", req)});
 app.get('/gettoken', (req,res) => {
 	getToken(req,res)
@@ -45,7 +46,7 @@ app.get('/token', (req,res) => {
 	state.applicationConfig.clientID=req.query.code;
 	res.redirect('/gettoken?code='+ req.query.code);
 });
-
+app.get('/download', (req,res) => {res.sendFile(path.join(__dirname, 'public', "document.pdf"))})
 app.get('/upload', (req,res) => res.render('upload'));
 app.post('/upload', upload, (req,res) => uploadToDrive(req,res));
 
@@ -75,7 +76,7 @@ return	{
 }}
 
 function getUserOptions(tkn) {
-	return {'uri':this.state.applicationConfig.graphEndpoint,
+	return {'uri':this.state.applicationConfig.graphEndpoint+"/me",
 	'headers':{
 		'Authorization':'Bearer '+tkn,
 		'User-Agent':'request',
@@ -84,9 +85,9 @@ function getUserOptions(tkn) {
 }
 
 function getUserInfo(req,res){
-	if (((req.query.code)||state.applicationConfig.clientID)
-	    &&   (req.query.code == state.applicationConfig.clientID))
-	{
+	// if (((req.query.code)||state.applicationConfig.clientID)
+	//     &&   (req.query.code == state.applicationConfig.clientID))
+	// {
 	request(getUserOptions(state.auth.token), (err,httpResponse,body) => {
 		if (err){return console.error('err:', err)}
 		let response = JSON.parse(body);
@@ -94,8 +95,8 @@ function getUserInfo(req,res){
 		res.render('response', {resp: response});
 		});
 	}
-	else getAcceptance(res);
-}
+	// else getAcceptance(res);
+
 
 function getToken(req,res){
 	//PUT /me/drive/root:/FolderA/FileB.txt:/content
@@ -136,15 +137,29 @@ function uploadToDrive(req,res){
 	buildReq = {
 		'port':443,
 		'uri':this.state.applicationConfig.graphEndpoint
-			+ '/drive/root:/'+ req.file.originalname +':/content',
+			+ '/me/drive/root:/'+ req.file.originalname +':/content',
 		'headers':{
 		'Authorization':'Bearer '+tkn,
 		'Content-Type':req.file.mimetype
 		},
 		'body':req.file.buffer
 	}
+	state.filename = req.file.originalname;
 	request.put(buildReq, (err,httpResponse,body) => {
 		if (err){return console.error('PUT error is :', err)}
-		res.render('upload');
+		info = JSON.parse(body)
+		uploaded = info.id;
+		buildUrl = state.applicationConfig.graphEndpoint + "/drive/items/" + uploaded + "/content?format=pdf";
+		res.render('upload', {resp:info})
+		request.get(
+		{	'uri': buildUrl,
+			'encoding' : null,
+			'headers':{
+				'Authorization':'Bearer '+tkn
+			}
+		}, (err,httpResponse,body) => {
+			const buffer = Buffer.from(body, 'utf8');
+			fs.writeFileSync('public/document.pdf', buffer);
+		})
 	});
 }
