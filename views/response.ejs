@@ -30,9 +30,14 @@
       <div class="starter-template">
 		<div class="starter-template">
 			<% if (typeof resp == 'object' && resp) { %>
-				<div>Hello <%= resp.displayName %></div>
-				<div>Your email is:  <%= resp.userPrincipalName %></div>
-		   <% } %>
+				<% if (resp.token) { %>
+					<div>Hello <%= resp.displayName %></div>
+					<div>Your email is:  <%= resp.userPrincipalName %></div>
+			  	 <% } %>
+				<% else { %>	
+					<h3> You have no token </h3>
+				<% }%>
+		  	 <% } %>
 		<% if (typeof resp == 'string') { %>
 				<div>This is your response <%= resp %></div>
 		   <% } %>
