@@ -2,9 +2,11 @@ const express = require('express')
 const path = require('path')
 const PORT = process.env.PORT || 5000
 const request= require('request')
-const https = require('https')
-const multer  = require('multer')
-const upload = multer({ dest: (path.join(__dirname, 'tmp')) })
+var bodyParser = require('body-parser');
+var multer = require('multer'); // v1.0.5
+const storage = multer.memoryStorage();
+var upload = multer({ storage }).single('image'); // for parsing multipart/form-data
+
 require('request-debug')(request)
 
 var app=express()
@@ -19,11 +21,14 @@ state={
 	auth: {
 		token: null,
 		clientcode: null,
-		appid:"67a4c393-c8c3-4a84-b855-282a1d7da22e",
-		apppwd:"cfshUUMUQI9303^);@qgbQ7",
-		applink:"https://anghene.com/token"
+		appid:process.env.APPID,
+		apppwd:process.env.APPPWD,
+		redirectUrl:process.env.INSTANCE
 	}
 }
+
+app.use(bodyParser.json()); // for parsing application/json
+app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.set('views', path.join(__dirname, 'views'));
@@ -42,10 +47,12 @@ app.get('/token', (req,res) => {
 });
 
 app.get('/upload', (req,res) => res.render('upload'));
-app.post('/upload', upload.single('image'), (req,res) => uploadToDrive(req,res));
+app.post('/upload', upload, (req,res) => uploadToDrive(req,res));
 
 function getAcceptance(res){
-	res.redirect('https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id='+ state.auth.appid + '&scope=user.read Files.ReadWrite.All offline_access&redirect_uri=' + state.auth.applink + "&response_type=code");
+	res.redirect('https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id='
+	+ state.auth.appid + '&scope=user.read Files.ReadWrite.All offline_access&redirect_uri='
+	+ state.auth.redirectUrl + "&response_type=code");
 }
 
 function buildTokenRequest (code) {
@@ -61,7 +68,7 @@ return	{
 		'client_id':state.auth.appid,
 		'client_secret':state.auth.apppwd,
 		'code':code,
-		'redirect_uri':state.auth.applink,
+		'redirect_uri':state.auth.redirectUrl,
 		'grant_type':'authorization_code',
 		'scope':'user.read Files.ReadWrite Files.ReadWrite.All',
 	}
@@ -98,7 +105,7 @@ function getToken(req,res){
 	{
 		self=this;
 		console.log("now having to get token with code: ", self.state.applicationConfig.clientID);
-		request(buildTokenRequest(self.state.applicationConfig.clientID), 
+		request(buildTokenRequest(self.state.applicationConfig.clientID),
 			(err, httpResponse, body) => {
 			if (err) {
 			return console.error('upload failed:', err);
@@ -113,11 +120,11 @@ function getToken(req,res){
 		.on('error', function(err) {
 			console.log(err)
 		})
-	
 		request.end;
 	}
 	else getAcceptance(res) // needs res to redirect
 }
+
 function uploadToDrive(req,res){
 	// make sure we still have a token
 	if ((!state.auth.token)||(state.applicationConfig.clientID))
@@ -125,19 +132,19 @@ function uploadToDrive(req,res){
 	else if (!state.auth.token) res.redirect('/gettoken');
 	tkn=state.auth.token;
 	// load the uploaded image as binary data
-	uploadedFile = req.file;
 	// build our request to OneDrive
 	buildReq = {
 		'port':443,
-		'uri':this.state.applicationConfig.graphEndpoint + '/drive/root:/'+ uploadedFile.originalname  +':/content',
+		'uri':this.state.applicationConfig.graphEndpoint
+			+ '/drive/root:/'+ req.file.originalname +':/content',
 		'headers':{
 		'Authorization':'Bearer '+tkn,
+		'Content-Type':req.file.mimetype
 		},
-		'form':uploadedFile.buffer 
+		'body':req.file.buffer
 	}
 	request.put(buildReq, (err,httpResponse,body) => {
 		if (err){return console.error('PUT error is :', err)}
 		res.render('upload');
-		});
-
+	});
 }
