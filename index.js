@@ -7,6 +7,7 @@ var bodyParser = require('body-parser');
 var multer = require('multer'); // v1.0.5
 const storage = multer.memoryStorage();
 var upload = multer({ storage }).single('image'); // for parsing multipart/form-data
+var empty = require('is-empty');
 
 require('request-debug')(request)
 
