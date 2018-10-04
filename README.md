@@ -1,3 +1,5 @@
+App written in nodejs express using request library to communicate with Microsoft Graph One Drive endpoint and upload a document to your Drive, returning said doc/docx converted in a pdf.
+
 # node-js-template
 
 A barebones Node.js app using [Express 4](http://expressjs.com/).
